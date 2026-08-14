@@ -10,3 +10,7 @@ dist/
 
 # TypeScript incremental build info
 tsconfig.tsbuildinfo
+
+# Local presentation assets (not reviewed for redistribution)
+presentation/
+~$*
