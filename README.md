@@ -5,9 +5,9 @@ An enterprise-grade reference application showing how an **AI marketing operatio
 Built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind**, and **Azure AI Foundry** (`gpt-4.1`, `gpt-image-2`, `sora-2`).
 
 > **All brands, campaigns, compliance rules, people, and metrics in this repository are fictional.**
-> Contoso, Fabrikam, and Northwind are Microsoft's standard sample company names. Nothing here represents
-> any real organization's brand guidelines, legal policy, marketing data, or compliance posture. Every
-> brand rule is flagged `demoPlaceholder: true` in code for exactly this reason.
+> Contoso is Microsoft's standard sample company name. Nothing here represents any real organization's
+> brand guidelines, legal policy, marketing data, or compliance posture. Every brand rule is flagged
+> `demoPlaceholder: true` in code for exactly this reason.
 
 ---
 
@@ -181,19 +181,27 @@ DISABLE_VIDEO_GENERATION=false
 
 ## How the multi-tenant model works
 
-Three fictional brands ship in the registry, each with a genuinely different compliance posture:
+The app ships with one brand — **Contoso Financial Services**, an auto & property insurer whose
+signature guardrail is a mascot (the Contoso Otter) whose generative likeness is **blocked** and routed
+to an approved-asset workflow instead.
 
-| Brand | Sector | Distinguishing guardrail |
-|---|---|---|
-| **Contoso Financial Services** | Auto & property insurance | Has a mascot (the Contoso Otter) — generative likeness is blocked and routed to an approved-asset workflow |
-| **Fabrikam Insurance Group** | Insurance & financial services | Protected service mark + jingle + endorser likeness can never be generated; savings claims need substantiation |
-| **Northwind Credit Union** | Member-owned credit union | NCUA + membership-eligibility disclosures; no generated uniforms, badges, or official seals |
+But brand configuration is **data, not code**. A `Tenant` object (`lib/tenants/types.ts`) is the single
+source of truth for:
 
-A `Tenant` object (`lib/tenants/types.ts`) is the single source of truth for display strings, product vocabulary, mascot policy, server-side agent personas, compliance must/must-never rules, the prompt-sanitizer config, and the entire seed content pack.
+- display strings and product vocabulary
+- mascot policy (or `null` for brands without one)
+- server-side agent personas
+- `complianceMustNever` / `complianceMustAlways` rule lists
+- the prompt-sanitizer config (brand-name replacements, protected-mark terms)
+- the entire seed content pack — briefs, variants, concepts, approvals, KPIs
 
-**To add a brand:** create one file in `lib/tenants/`, add it to `TENANTS` in `registry.ts`. Nothing else changes.
+**To add a brand:** create one file in `lib/tenants/`, add it to `TENANTS` in `registry.ts`. Nothing
+else changes — the switcher, every workspace, and all the system prompts pick it up automatically.
+Switching brands re-skins the whole workspace: copy, seed campaigns, rules, reviewers, KPIs, and the
+instructions sent to the model.
 
-Switching brands re-skins the whole workspace — copy, seed campaigns, rules, reviewers, KPIs, and the system prompts sent to the model.
+This is the extension point to use when you want the demo to speak in **your** organization's voice —
+see [Grounding it on your own content](#grounding-it-on-your-own-content).
 
 ---
 
@@ -228,7 +236,7 @@ lib/
   config.ts       Env reading + capability detection
   server/         azureOpenAI client, prompt sanitizer, tenant prompt builder
   services/       Client-side service layer with mock fallbacks
-  tenants/        Tenant model, registry, and the three brand packs
+  tenants/        Tenant model, registry, and the Contoso brand pack
 types/            Shared domain types
 ```
 
@@ -309,7 +317,11 @@ Right now the agents reason from **seed data in `data/` and `lib/tenants/`**. Re
 
 ### 1. Swap the tenant pack (hours)
 
-The fastest meaningful customization. Create `lib/tenants/your-brand.ts` with your actual tone-of-voice rules, product vocabulary, required disclaimers, and compliance must/must-never lists. The agents' system prompts are assembled from these fields, so the model immediately starts writing in your voice and applying your rules. **No retrieval infrastructure needed.**
+The fastest meaningful customization. Copy `lib/tenants/contoso.ts` to `lib/tenants/your-brand.ts` and
+replace it with your actual tone-of-voice rules, product vocabulary, required disclaimers, and
+compliance must/must-never lists — then register it in `registry.ts`. The agents' system prompts are
+assembled from these fields, so the model immediately starts writing in your voice and applying your
+rules. **No retrieval infrastructure needed.**
 
 ### 2. RAG over your brand and compliance documents (days)
 
@@ -365,6 +377,12 @@ Ideas roughly ordered by payoff-to-effort:
 - **Agent-to-agent negotiation** — let the Validator and Content agents iterate autonomously until the score clears a threshold, escalating to a human only on genuine conflict
 
 ---
+
+## Security notes
+
+- **No secrets are committed.** `.gitignore` excludes `.env*` (except `.env.example`, which contains only placeholders). Credentials are read server-side from environment variables and never reach the browser.
+- **Prefer Entra ID over API keys.** The app uses `DefaultAzureCredential` by default; keys are a fallback for resources that still allow them.
+- **Dependencies:** Next.js is pinned to a patched `14.2.x`. `npm audit` will still report advisories against the PostCSS / Tailwind / ESLint toolchain — these are **build-time** dependencies with no fix available inside the Next 14 + Tailwind 3 tree (npm's suggested remedy is a Next 16 canary). They do not affect the running app. Upgrade the stack if that matters for your environment.
 
 ## Scripts
 

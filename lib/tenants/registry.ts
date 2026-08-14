@@ -1,17 +1,18 @@
 import type { Tenant } from "./types";
 import { contosoTenant } from "./contoso";
-import { fabrikamTenant } from "./fabrikam";
-import { northwindTenant } from "./northwind";
 
 /**
- * Tenant registry — the list of demo brands available in the switcher.
+ * Tenant registry — the list of brands available in the switcher.
  * Order here is the order shown in the dropdown.
  *
- * All brands are fictional. Contoso, Fabrikam, and Northwind are the standard
- * Microsoft sample company names; none of this content represents a real
- * organization's brand guidelines, compliance policy, or campaign data.
+ * Contoso Financial Services is fictional (Contoso is Microsoft's standard
+ * sample company name). Nothing here represents a real organization's brand
+ * guidelines, compliance policy, or campaign data.
+ *
+ * The app is multi-tenant by design: adding a brand means adding one `Tenant`
+ * object to this array. No UI code changes.
  */
-export const TENANTS: Tenant[] = [contosoTenant, fabrikamTenant, northwindTenant];
+export const TENANTS: Tenant[] = [contosoTenant];
 
 export const DEFAULT_TENANT_ID = contosoTenant.id;
 
