@@ -1,5 +1,5 @@
 /**
- * Centralized type definitions for the Contoso Marketing Campaign Agent.
+ * Centralized type definitions for Campaign Autopilot.
  *
  * These shapes are deliberately framework-agnostic. The mock services in
  * `lib/services/*` return data conforming to these types so that swapping

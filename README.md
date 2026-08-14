@@ -1,4 +1,6 @@
-# Contoso Marketing Campaign Agent
+# Campaign Autopilot
+
+> **One prompt to a brand-validated campaign. With guardrails.**
 
 An enterprise-grade reference application showing how an **AI marketing operations workspace** can turn a plain-English campaign idea into a **brand-validated, compliance-checked, channel-ready content package** — including generated imagery and a hero video.
 

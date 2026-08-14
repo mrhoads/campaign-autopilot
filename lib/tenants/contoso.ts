@@ -90,7 +90,7 @@ export const contosoTenant: Tenant = {
     autopilotDefault:
       "Build me a Memorial Day campaign for Contoso auto insurance focused on families and young professionals. I need paid social copy, email copy, a landing page concept, three visual directions, and a 12-second hero video for connected TV. Keep it patriotic, modern, and trustworthy — community-first, not flag-forward.",
     welcome:
-      "Welcome to the Contoso Marketing Campaign Agent. Describe the campaign you want to build — product line, audience, timing, channels, tone — and I'll draft a brief alongside you. I'll only ask clarifying questions when something would unblock a brand or compliance check.",
+      "Welcome to Campaign Autopilot. Describe the campaign you want to build — product line, audience, timing, channels, tone — and I'll draft a brief alongside you. I'll only ask clarifying questions when something would unblock a brand or compliance check.",
     videoDownloadStem: "contoso-hero",
   },
   content: {

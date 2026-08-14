@@ -12,9 +12,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Marketing Campaign Agent",
+  title: "Campaign Autopilot",
   description:
-    "Internal AI marketing operations workspace — turn a campaign idea into a brand-validated, channel-ready content package.",
+    "One prompt to a brand-validated campaign. With guardrails. An AI marketing operations workspace that turns a campaign idea into a channel-ready, compliance-checked content package.",
 };
 
 export default function RootLayout({
