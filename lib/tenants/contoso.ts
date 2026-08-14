@@ -13,8 +13,14 @@ import { brandRules } from "@/data/brandRules";
 import type { Tenant } from "./types";
 
 /**
- * Contoso tenant — the original demo brand. Content is sourced from the
- * existing seed library so behavior is unchanged when Contoso is selected.
+ * Contoso Financial Services — the sample brand shipped with this app.
+ *
+ * Fictional. Contoso is Microsoft's standard sample company name; the brand
+ * rules, campaigns, people, and metrics below are illustrative only and do not
+ * represent any real organization. The seed content pack lives in `data/`.
+ *
+ * Use this file as the template for your own brand — see the README section
+ * "Grounding it on your own content".
  */
 export const contosoTenant: Tenant = {
   id: "contoso",
