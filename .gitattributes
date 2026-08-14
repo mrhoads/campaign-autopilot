@@ -1,0 +1,14 @@
+# Normalize line endings on checkin; let Git decide on checkout.
+* text=auto
+
+# Explicitly binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.mp4 binary
+*.pptx binary
+*.docx binary
+*.xlsx binary
