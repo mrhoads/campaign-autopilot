@@ -86,9 +86,9 @@ export const contosoTenant: Tenant = {
   },
   prompts: {
     builderSample:
-      "I want to build a Memorial Day campaign for Contoso auto insurance focused on families and young professionals. I need paid social copy, email copy, a landing page concept, and 3 visual directions. Keep it patriotic, modern, and trustworthy.",
+      "I want to build a Labor Day campaign for Contoso auto insurance focused on families and young professionals. I need paid social copy, email copy, a landing page concept, and 3 visual directions. Keep it patriotic, modern, and trustworthy.",
     autopilotDefault:
-      "Build me a Memorial Day campaign for Contoso auto insurance focused on families and young professionals. I need paid social copy, email copy, a landing page concept, three visual directions, and a 12-second hero video for connected TV. Keep it patriotic, modern, and trustworthy — community-first, not flag-forward.",
+      "Build me a Labor Day campaign for Contoso auto insurance focused on families and young professionals. I need paid social copy, email copy, a landing page concept, three visual directions, and a 12-second hero video for connected TV. Keep it patriotic, modern, and trustworthy — community-first, not flag-forward.",
     welcome:
       "Welcome to Campaign Autopilot. Describe the campaign you want to build — product line, audience, timing, channels, tone — and I'll draft a brief alongside you. I'll only ask clarifying questions when something would unblock a brand or compliance check.",
     videoDownloadStem: "contoso-hero",
@@ -131,9 +131,9 @@ export const contosoTenant: Tenant = {
         status: "pending",
       },
     ],
-    primaryUser: { name: "Jordan Patel", initials: "JP", role: "Sr. Marketing PM" },
-    dashboardGreeting: "Welcome back, Jordan",
+    primaryUser: { name: "Mike Rhoads", initials: "MR", role: "Sr. Marketing PM" },
+    dashboardGreeting: "Welcome back, Mike",
     dashboardDescription:
-      "Three campaigns are awaiting your review and the Memorial Day package is one approval away from trafficking. Here's where the workspace stands today.",
+      "Three campaigns are awaiting your review and the Labor Day package is one approval away from trafficking. Here's where the workspace stands today.",
   },
 };
