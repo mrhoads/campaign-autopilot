@@ -53,7 +53,6 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.12.1' 
     location: location
     acrAdminUserEnabled: false
     acrSku: 'Basic'
-    publicNetworkAccess: 'Enabled'
     tags: tags
   }
 }
