@@ -39,11 +39,16 @@ workflow creates a new resource group. If an Azure platform team pre-creates
 resource groups, narrow both assignments to those groups instead and change the
 Bicep entry point to resource-group scope.
 
-The script also creates an environment-scoped federated credential with subject:
+The script queries GitHub's OIDC configuration and creates an
+environment-scoped federated credential from the repository's current subject
+prefix. For this repository, the subject is:
 
 ```text
-repo:mrhoads/campaign-autopilot:environment:production
+repo:mrhoads@5631679/campaign-autopilot@1334362774:environment:production
 ```
+
+Deriving the prefix from GitHub avoids login failures when GitHub uses immutable
+owner and repository IDs in OIDC claims.
 
 ## Protect the GitHub Environment
 

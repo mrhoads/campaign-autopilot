@@ -210,7 +210,7 @@ Configure any optional application variables in the same GitHub environment:
 | `DISABLE_IMAGE_GENERATION` | No | Defaults to `false` |
 | `DISABLE_VIDEO_GENERATION` | No | Defaults to `false` |
 
-The pipeline identity needs permission to create resources and role assignments in the subscription. Its federated credential is scoped to the `production` GitHub environment with subject `repo:mrhoads/campaign-autopilot:environment:production`. The Container App uses a different user-assigned identity at runtime, so no Azure OpenAI API key is stored in GitHub. Grant the runtime principal shown in the workflow summary the **Cognitive Services OpenAI User** role on the Azure OpenAI resource to enable live model calls.
+The pipeline identity needs permission to create resources and role assignments in the subscription. Its federated credential is scoped to the `production` GitHub environment and uses the OIDC subject prefix returned by GitHub, including immutable owner and repository IDs when configured. The Container App uses a different user-assigned identity at runtime, so no Azure OpenAI API key is stored in GitHub. Grant the runtime principal shown in the workflow summary the **Cognitive Services OpenAI User** role on the Azure OpenAI resource to enable live model calls.
 
 Infrastructure is defined in `infra/main.bicep`; resource names are deterministic for each subscription, region, and environment name.
 

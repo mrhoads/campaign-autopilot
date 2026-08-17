@@ -33,6 +33,10 @@ done
 
 az account set --subscription "$subscription_id"
 tenant_id="$(az account show --query tenantId --output tsv)"
+subject_prefix="$(gh api \
+  "repos/${repository}/actions/oidc/customization/sub" \
+  --jq '.sub_claim_prefix')"
+federated_subject="${subject_prefix}:environment:${github_environment}"
 
 az group create \
   --name "$identity_resource_group" \
@@ -75,14 +79,22 @@ if az identity federated-credential show \
   --resource-group "$identity_resource_group" \
   --only-show-errors \
   --output none 2>/dev/null; then
-  echo "Federated credential already exists: $federated_credential_name"
+  az identity federated-credential update \
+    --name "$federated_credential_name" \
+    --identity-name "$identity_name" \
+    --resource-group "$identity_resource_group" \
+    --issuer "https://token.actions.githubusercontent.com" \
+    --subject "$federated_subject" \
+    --audiences "api://AzureADTokenExchange" \
+    --only-show-errors \
+    --output none
 else
   az identity federated-credential create \
     --name "$federated_credential_name" \
     --identity-name "$identity_name" \
     --resource-group "$identity_resource_group" \
     --issuer "https://token.actions.githubusercontent.com" \
-    --subject "repo:${repository}:environment:${github_environment}" \
+    --subject "$federated_subject" \
     --audiences "api://AzureADTokenExchange" \
     --only-show-errors \
     --output none
