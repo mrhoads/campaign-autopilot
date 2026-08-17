@@ -118,6 +118,10 @@ module containerApp 'br/public:avm/res/app/container-app:0.23.0' = {
             value: azureOpenAIEndpoint
           }
           {
+            name: 'AZURE_CLIENT_ID'
+            value: runtimeIdentity.outputs.clientId
+          }
+          {
             name: 'AZURE_OPENAI_CHAT_DEPLOYMENT'
             value: azureOpenAIChatDeployment
           }
@@ -203,3 +207,4 @@ output containerRegistryLoginServer string = '${containerRegistry.outputs.name}.
 output containerAppName string = containerApp.outputs.name
 output containerAppUrl string = 'https://${containerApp.outputs.fqdn}'
 output runtimeIdentityPrincipalId string = runtimeIdentity.outputs.principalId
+output runtimeIdentityClientId string = runtimeIdentity.outputs.clientId

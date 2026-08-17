@@ -17,6 +17,8 @@ env:
   AZURE_LOCATION: ${{ vars.AZURE_LOCATION || 'eastus2' }}
   AZURE_ENVIRONMENT_NAME: ${{ vars.AZURE_ENVIRONMENT_NAME || 'prod' }}
   AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME || 'campaign-autopilot-production-rg' }}
+  AZURE_OPENAI_RESOURCE_GROUP_NAME: ${{ vars.AZURE_OPENAI_RESOURCE_GROUP_NAME || 'campaign-autopilot-rg' }}
+  AZURE_OPENAI_ACCOUNT_NAME: ${{ vars.AZURE_OPENAI_ACCOUNT_NAME || 'campaignautopilotai260814' }}
   IMAGE_REPOSITORY: campaign-autopilot
 
 jobs:
@@ -86,10 +88,60 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Validate Azure OpenAI deployments
+        id: azure-openai
+        env:
+          AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-4.1' }}
+          AZURE_OPENAI_IMAGE_DEPLOYMENT: ${{ vars.AZURE_OPENAI_IMAGE_DEPLOYMENT || 'gpt-image-2' }}
+          AZURE_OPENAI_VIDEO_DEPLOYMENT: ${{ vars.AZURE_OPENAI_VIDEO_DEPLOYMENT || 'sora-2' }}
+        run: |
+          set -euo pipefail
+
+          endpoint="$(az cognitiveservices account show \
+            --resource-group "$AZURE_OPENAI_RESOURCE_GROUP_NAME" \
+            --name "$AZURE_OPENAI_ACCOUNT_NAME" \
+            --query properties.endpoint \
+            --output tsv)"
+
+          if [ -z "$endpoint" ]; then
+            echo "::error::Azure OpenAI account $AZURE_OPENAI_ACCOUNT_NAME has no endpoint."
+            exit 1
+          fi
+
+          for deployment in \
+            "$AZURE_OPENAI_CHAT_DEPLOYMENT" \
+            "$AZURE_OPENAI_IMAGE_DEPLOYMENT" \
+            "$AZURE_OPENAI_VIDEO_DEPLOYMENT"; do
+            state="$(az cognitiveservices account deployment show \
+              --resource-group "$AZURE_OPENAI_RESOURCE_GROUP_NAME" \
+              --name "$AZURE_OPENAI_ACCOUNT_NAME" \
+              --deployment-name "$deployment" \
+              --query properties.provisioningState \
+              --output tsv)"
+            model="$(az cognitiveservices account deployment show \
+              --resource-group "$AZURE_OPENAI_RESOURCE_GROUP_NAME" \
+              --name "$AZURE_OPENAI_ACCOUNT_NAME" \
+              --deployment-name "$deployment" \
+              --query properties.model.name \
+              --output tsv)"
+
+            if [ "$state" != "Succeeded" ]; then
+              echo "::error::Azure OpenAI deployment $deployment is not ready; provisioning state is $state."
+              exit 1
+            fi
+
+            if [ "$model" != "$deployment" ]; then
+              echo "::error::Azure OpenAI deployment $deployment points to model $model."
+              exit 1
+            fi
+          done
+
+          echo "endpoint=${endpoint%/}/openai/v1" >> "$GITHUB_OUTPUT"
+
       - name: Provision Azure infrastructure
         id: infrastructure
         env:
-          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_ENDPOINT: ${{ steps.azure-openai.outputs.endpoint }}
           AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-4.1' }}
           AZURE_OPENAI_IMAGE_DEPLOYMENT: ${{ vars.AZURE_OPENAI_IMAGE_DEPLOYMENT || 'gpt-image-2' }}
           AZURE_OPENAI_VIDEO_DEPLOYMENT: ${{ vars.AZURE_OPENAI_VIDEO_DEPLOYMENT || 'sora-2' }}
@@ -129,6 +181,8 @@ jobs:
               environmentName="$AZURE_ENVIRONMENT_NAME" \
               resourceGroupName="$AZURE_RESOURCE_GROUP_NAME" \
               azureOpenAIEndpoint="$AZURE_OPENAI_ENDPOINT" \
+              azureOpenAIResourceGroupName="$AZURE_OPENAI_RESOURCE_GROUP_NAME" \
+              azureOpenAIAccountName="$AZURE_OPENAI_ACCOUNT_NAME" \
               azureOpenAIChatDeployment="$AZURE_OPENAI_CHAT_DEPLOYMENT" \
               azureOpenAIImageDeployment="$AZURE_OPENAI_IMAGE_DEPLOYMENT" \
               azureOpenAIVideoDeployment="$AZURE_OPENAI_VIDEO_DEPLOYMENT" \
@@ -147,6 +201,8 @@ jobs:
               environmentName="$AZURE_ENVIRONMENT_NAME" \
               resourceGroupName="$AZURE_RESOURCE_GROUP_NAME" \
               azureOpenAIEndpoint="$AZURE_OPENAI_ENDPOINT" \
+              azureOpenAIResourceGroupName="$AZURE_OPENAI_RESOURCE_GROUP_NAME" \
+              azureOpenAIAccountName="$AZURE_OPENAI_ACCOUNT_NAME" \
               azureOpenAIChatDeployment="$AZURE_OPENAI_CHAT_DEPLOYMENT" \
               azureOpenAIImageDeployment="$AZURE_OPENAI_IMAGE_DEPLOYMENT" \
               azureOpenAIVideoDeployment="$AZURE_OPENAI_VIDEO_DEPLOYMENT" \
@@ -171,6 +227,7 @@ jobs:
           write_output "container-app-name" ".containerAppName.value"
           write_output "container-app-url" ".containerAppUrl.value"
           write_output "runtime-principal-id" ".runtimeIdentityPrincipalId.value"
+          write_output "azure-openai-endpoint" ".azureOpenAIEndpoint.value"
 
       - name: Build and push container image
         env:
@@ -204,16 +261,26 @@ jobs:
           CONTAINER_APP_URL: ${{ steps.infrastructure.outputs.container-app-url }}
         run: |
           set -euo pipefail
+          status_url="${CONTAINER_APP_URL%/}/api/status"
           for attempt in {1..12}; do
-            if curl --fail --silent --show-error --max-time 20 "$CONTAINER_APP_URL" > /dev/null; then
-              echo "Deployment is healthy at $CONTAINER_APP_URL"
-              exit 0
+            if status="$(curl --fail --silent --show-error --max-time 20 "$status_url")"; then
+              if jq --exit-status \
+                '.endpointConfigured == true
+                  and .capabilities.chat == true
+                  and .capabilities.image == true
+                  and .capabilities.video == true' \
+                <<< "$status" > /dev/null; then
+                echo "Deployment is healthy with all AI capabilities at $CONTAINER_APP_URL"
+                exit 0
+              fi
+
+              echo "Container App is responding but AI capabilities are not ready: $status"
             fi
             echo "Waiting for the new revision (attempt $attempt of 12)..."
             sleep 10
           done
 
-          echo "::error::The Container App did not become healthy."
+          echo "::error::The Container App did not report all AI capabilities as ready."
           exit 1
 
       - name: Add deployment URL to summary
@@ -221,11 +288,13 @@ jobs:
           RESOURCE_GROUP: ${{ steps.infrastructure.outputs.resource-group }}
           CONTAINER_APP_URL: ${{ steps.infrastructure.outputs.container-app-url }}
           RUNTIME_PRINCIPAL_ID: ${{ steps.infrastructure.outputs.runtime-principal-id }}
+          AZURE_OPENAI_ENDPOINT: ${{ steps.infrastructure.outputs.azure-openai-endpoint }}
         run: |
           {
             echo "### Azure deployment complete"
             echo
             echo "- Resource group: \`$RESOURCE_GROUP\`"
             echo "- Application: [$CONTAINER_APP_URL]($CONTAINER_APP_URL)"
+            echo "- Azure OpenAI endpoint: \`$AZURE_OPENAI_ENDPOINT\`"
             echo "- Runtime identity principal: \`$RUNTIME_PRINCIPAL_ID\`"
           } >> "$GITHUB_STEP_SUMMARY"

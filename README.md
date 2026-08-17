@@ -184,7 +184,7 @@ DISABLE_VIDEO_GENERATION=false
 
 ## Deploy to Azure
 
-The `Deploy to Azure` GitHub Actions workflow creates a dedicated `campaign-autopilot-production-rg` resource group, provisions Azure Container Apps, Azure Container Registry, Log Analytics, and a user-assigned managed identity in `eastus2`, then builds and deploys the application container. Pushes to `main` deploy automatically; the workflow can also be run manually. Later runs update that group only when its workload and environment tags match.
+The `Deploy to Azure` GitHub Actions workflow creates a dedicated `campaign-autopilot-production-rg` resource group, provisions Azure Container Apps, Azure Container Registry, Log Analytics, and a user-assigned managed identity in `eastus2`, then builds and deploys the application container. It connects the app to the existing `campaignautopilotai260814` Azure OpenAI account, validates the required `gpt-4.1`, `gpt-image-2`, and `sora-2` deployments, and grants the runtime identity passwordless model access. Pushes to `main` deploy automatically; the workflow can also be run manually. Later runs update the workload group only when its workload and environment tags match.
 
 Bootstrap a separate user-assigned identity for GitHub OIDC and configure the repository's `production` environment:
 
@@ -203,14 +203,15 @@ Configure any optional application variables in the same GitHub environment:
 
 | Variable | Required | Value |
 |---|---:|---|
-| `AZURE_OPENAI_ENDPOINT` | For live AI | Foundry v1 or classic Azure OpenAI endpoint |
+| `AZURE_OPENAI_RESOURCE_GROUP_NAME` | No | Defaults to `campaign-autopilot-rg` |
+| `AZURE_OPENAI_ACCOUNT_NAME` | No | Defaults to `campaignautopilotai260814` |
 | `AZURE_OPENAI_CHAT_DEPLOYMENT` | No | Defaults to `gpt-4.1` |
 | `AZURE_OPENAI_IMAGE_DEPLOYMENT` | No | Defaults to `gpt-image-2` |
 | `AZURE_OPENAI_VIDEO_DEPLOYMENT` | No | Defaults to `sora-2` |
 | `DISABLE_IMAGE_GENERATION` | No | Defaults to `false` |
 | `DISABLE_VIDEO_GENERATION` | No | Defaults to `false` |
 
-The pipeline identity needs permission to create resources and role assignments in the subscription. Its federated credential is scoped to the `production` GitHub environment and uses the OIDC subject prefix returned by GitHub, including immutable owner and repository IDs when configured. The Container App uses a different user-assigned identity at runtime, so no Azure OpenAI API key is stored in GitHub. Grant the runtime principal shown in the workflow summary the **Cognitive Services OpenAI User** role on the Azure OpenAI resource to enable live model calls.
+The pipeline identity needs permission to create resources and role assignments in the subscription. Its federated credential is scoped to the `production` GitHub environment and uses the OIDC subject prefix returned by GitHub, including immutable owner and repository IDs when configured. The Container App uses a different user-assigned identity at runtime, so no Azure OpenAI API key is stored in GitHub. Bicep grants that runtime identity the **Cognitive Services OpenAI User** role on the configured Azure OpenAI account.
 
 Infrastructure is defined in `infra/main.bicep`; resource names are deterministic for each subscription, region, and environment name.
 

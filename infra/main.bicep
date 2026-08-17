@@ -14,7 +14,8 @@ param environmentName string = 'prod'
 param resourceGroupName string = 'campaign-autopilot-${environmentName}-rg'
 
 @description('Azure OpenAI or Foundry v1 endpoint.')
-param azureOpenAIEndpoint string = ''
+@minLength(1)
+param azureOpenAIEndpoint string
 
 @description('Chat model deployment name.')
 param azureOpenAIChatDeployment string = 'gpt-4.1'
@@ -25,6 +26,12 @@ param azureOpenAIImageDeployment string = 'gpt-image-2'
 @description('Video model deployment name.')
 param azureOpenAIVideoDeployment string = 'sora-2'
 
+@description('Resource group containing the existing Azure OpenAI account.')
+param azureOpenAIResourceGroupName string
+
+@description('Name of the existing Azure OpenAI account.')
+param azureOpenAIAccountName string
+
 @description('Disable image generation for cost control.')
 param disableImageGeneration bool = false
 
@@ -32,8 +39,12 @@ param disableImageGeneration bool = false
 param disableVideoGeneration bool = false
 
 var resourceToken = uniqueString(subscription().id, location, environmentName)
+var cognitiveServicesOpenAIUserRoleDefinitionId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+)
 
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
+resource workloadResourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: resourceGroupName
   location: location
   tags: {
@@ -44,7 +55,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
 
 module resources 'resources.bicep' = {
   name: 'campaign-autopilot-${environmentName}'
-  scope: resourceGroup
+  scope: workloadResourceGroup
   params: {
     location: location
     resourceToken: resourceToken
@@ -58,9 +69,22 @@ module resources 'resources.bicep' = {
   }
 }
 
-output resourceGroupName string = resourceGroup.name
+module azureOpenAIAccess 'ai-access.bicep' = {
+  name: 'azure-openai-access-${environmentName}'
+  scope: resourceGroup(azureOpenAIResourceGroupName)
+  params: {
+    azureOpenAIAccountName: azureOpenAIAccountName
+    principalId: resources.outputs.runtimeIdentityPrincipalId
+    roleAssignmentSeed: resourceToken
+    roleDefinitionId: cognitiveServicesOpenAIUserRoleDefinitionId
+  }
+}
+
+output resourceGroupName string = workloadResourceGroup.name
 output containerRegistryName string = resources.outputs.containerRegistryName
 output containerRegistryLoginServer string = resources.outputs.containerRegistryLoginServer
 output containerAppName string = resources.outputs.containerAppName
 output containerAppUrl string = resources.outputs.containerAppUrl
 output runtimeIdentityPrincipalId string = resources.outputs.runtimeIdentityPrincipalId
+output runtimeIdentityClientId string = resources.outputs.runtimeIdentityClientId
+output azureOpenAIEndpoint string = azureOpenAIEndpoint

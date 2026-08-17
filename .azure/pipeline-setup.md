@@ -74,16 +74,18 @@ Configure the optional application variables in the same environment:
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `AZURE_OPENAI_ENDPOINT` | Empty | Existing Foundry or Azure OpenAI endpoint |
+| `AZURE_OPENAI_RESOURCE_GROUP_NAME` | `campaign-autopilot-rg` | Resource group containing the existing Azure OpenAI account |
+| `AZURE_OPENAI_ACCOUNT_NAME` | `campaignautopilotai260814` | Existing Azure OpenAI account |
 | `AZURE_OPENAI_CHAT_DEPLOYMENT` | `gpt-4.1` | Chat deployment |
 | `AZURE_OPENAI_IMAGE_DEPLOYMENT` | `gpt-image-2` | Image deployment |
 | `AZURE_OPENAI_VIDEO_DEPLOYMENT` | `sora-2` | Video deployment |
 | `DISABLE_IMAGE_GENERATION` | `false` | Image-generation kill switch |
 | `DISABLE_VIDEO_GENERATION` | `false` | Video-generation kill switch |
 
-No application API key is stored in GitHub. If live AI calls are enabled, grant
-the Container App runtime principal shown in the workflow summary the
-**Cognitive Services OpenAI User** role on the existing AI resource.
+No application API key is stored in GitHub. Bicep grants the Container App
+runtime identity **Cognitive Services OpenAI User** on the configured account.
+The workflow fails before provisioning if the account or any required model
+deployment is missing or not ready.
 
 ## First Deployment
 

@@ -12,7 +12,7 @@
       "value": "campaign-autopilot-production-rg"
     },
     "azureOpenAIEndpoint": {
-      "value": ""
+      "value": "https://campaignautopilotai260814.openai.azure.com/openai/v1"
     },
     "azureOpenAIChatDeployment": {
       "value": "gpt-4.1"
@@ -22,6 +22,12 @@
     },
     "azureOpenAIVideoDeployment": {
       "value": "sora-2"
+    },
+    "azureOpenAIResourceGroupName": {
+      "value": "campaign-autopilot-rg"
+    },
+    "azureOpenAIAccountName": {
+      "value": "campaignautopilotai260814"
     },
     "disableImageGeneration": {
       "value": false
