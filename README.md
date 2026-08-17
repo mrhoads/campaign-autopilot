@@ -19,6 +19,7 @@ Built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind**, and **Azur
 - [Architecture](#architecture)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
+- [Deploy to Azure](#deploy-to-azure)
 - [How the multi-tenant model works](#how-the-multi-tenant-model-works)
 - [Responsible AI guardrails](#responsible-ai-guardrails)
 - [Project structure](#project-structure)
@@ -178,6 +179,40 @@ DISABLE_VIDEO_GENERATION=false
 | Classic Azure OpenAI | `https://<resource>.openai.azure.com` | Deployment name goes in the URL path. |
 
 **Authentication precedence:** if `AZURE_OPENAI_API_KEY` is set it is used; otherwise `DefaultAzureCredential` acquires an Entra token (picking up `az login`, managed identity, or `AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET`/`AZURE_TENANT_ID`). Enterprise Foundry tenants commonly disable keys, so Entra ID is the default path.
+
+---
+
+## Deploy to Azure
+
+The `Deploy to Azure` GitHub Actions workflow creates a dedicated `campaign-autopilot-production-rg` resource group, provisions Azure Container Apps, Azure Container Registry, Log Analytics, and a user-assigned managed identity in `eastus2`, then builds and deploys the application container. Pushes to `main` deploy automatically; the workflow can also be run manually. Later runs update that group only when its workload and environment tags match.
+
+Bootstrap a separate user-assigned identity for GitHub OIDC and configure the repository's `production` environment:
+
+```bash
+chmod +x scripts/setup-azure-auth-for-pipeline.sh
+scripts/setup-azure-auth-for-pipeline.sh \
+  c8fad4c4-3897-42b5-bbc2-5d96f255f209 \
+  mrhoads/campaign-autopilot \
+  eastus2 \
+  production
+```
+
+The script configures the required Azure IDs and deployment settings. See [`.azure/pipeline-setup.md`](.azure/pipeline-setup.md) for the RBAC model, environment protection rules, and first-deployment steps.
+
+Configure any optional application variables in the same GitHub environment:
+
+| Variable | Required | Value |
+|---|---:|---|
+| `AZURE_OPENAI_ENDPOINT` | For live AI | Foundry v1 or classic Azure OpenAI endpoint |
+| `AZURE_OPENAI_CHAT_DEPLOYMENT` | No | Defaults to `gpt-4.1` |
+| `AZURE_OPENAI_IMAGE_DEPLOYMENT` | No | Defaults to `gpt-image-2` |
+| `AZURE_OPENAI_VIDEO_DEPLOYMENT` | No | Defaults to `sora-2` |
+| `DISABLE_IMAGE_GENERATION` | No | Defaults to `false` |
+| `DISABLE_VIDEO_GENERATION` | No | Defaults to `false` |
+
+The pipeline identity needs permission to create resources and role assignments in the subscription. Its federated credential is scoped to the `production` GitHub environment with subject `repo:mrhoads/campaign-autopilot:environment:production`. The Container App uses a different user-assigned identity at runtime, so no Azure OpenAI API key is stored in GitHub. Grant the runtime principal shown in the workflow summary the **Cognitive Services OpenAI User** role on the Azure OpenAI resource to enable live model calls.
+
+Infrastructure is defined in `infra/main.bicep`; resource names are deterministic for each subscription, region, and environment name.
 
 ---
 

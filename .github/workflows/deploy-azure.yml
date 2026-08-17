@@ -1,0 +1,231 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: azure-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION || 'eastus2' }}
+  AZURE_ENVIRONMENT_NAME: ${{ vars.AZURE_ENVIRONMENT_NAME || 'prod' }}
+  AZURE_RESOURCE_GROUP_NAME: ${{ vars.AZURE_RESOURCE_GROUP_NAME || 'campaign-autopilot-production-rg' }}
+  IMAGE_REPOSITORY: campaign-autopilot
+
+jobs:
+  validate:
+    name: Validate application
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  deploy:
+    name: Provision and deploy
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: production
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate deployment configuration
+        env:
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+
+          missing=()
+          for name in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            if [ -z "${!name}" ]; then
+              missing+=("$name")
+            fi
+          done
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            printf '::error::Missing production environment variable: %s\n' "${missing[@]}"
+            exit 1
+          fi
+
+      - name: Sign in to Azure with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Provision Azure infrastructure
+        id: infrastructure
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT || 'gpt-4.1' }}
+          AZURE_OPENAI_IMAGE_DEPLOYMENT: ${{ vars.AZURE_OPENAI_IMAGE_DEPLOYMENT || 'gpt-image-2' }}
+          AZURE_OPENAI_VIDEO_DEPLOYMENT: ${{ vars.AZURE_OPENAI_VIDEO_DEPLOYMENT || 'sora-2' }}
+          DISABLE_IMAGE_GENERATION: ${{ vars.DISABLE_IMAGE_GENERATION || 'false' }}
+          DISABLE_VIDEO_GENERATION: ${{ vars.DISABLE_VIDEO_GENERATION || 'false' }}
+        run: |
+          set -euo pipefail
+
+          if [ "$(az group exists --name "$AZURE_RESOURCE_GROUP_NAME")" = "true" ]; then
+            existing_workload="$(az group show \
+              --name "$AZURE_RESOURCE_GROUP_NAME" \
+              --query 'tags.workload' \
+              --output tsv)"
+            existing_environment="$(az group show \
+              --name "$AZURE_RESOURCE_GROUP_NAME" \
+              --query 'tags.environment' \
+              --output tsv)"
+
+            if [ "$existing_workload" != "campaign-autopilot" ] \
+              || [ "$existing_environment" != "$AZURE_ENVIRONMENT_NAME" ]; then
+              echo "::error::Resource group $AZURE_RESOURCE_GROUP_NAME already exists but is not tagged for this workload and environment."
+              exit 1
+            fi
+
+            echo "Updating existing Campaign Autopilot resource group: $AZURE_RESOURCE_GROUP_NAME"
+          else
+            echo "Creating new Campaign Autopilot resource group: $AZURE_RESOURCE_GROUP_NAME"
+          fi
+
+          az deployment sub validate \
+            --name "campaign-autopilot-validate-${GITHUB_RUN_ID}" \
+            --location "$AZURE_LOCATION" \
+            --template-file infra/main.bicep \
+            --parameters infra/main.parameters.json \
+            --parameters \
+              location="$AZURE_LOCATION" \
+              environmentName="$AZURE_ENVIRONMENT_NAME" \
+              resourceGroupName="$AZURE_RESOURCE_GROUP_NAME" \
+              azureOpenAIEndpoint="$AZURE_OPENAI_ENDPOINT" \
+              azureOpenAIChatDeployment="$AZURE_OPENAI_CHAT_DEPLOYMENT" \
+              azureOpenAIImageDeployment="$AZURE_OPENAI_IMAGE_DEPLOYMENT" \
+              azureOpenAIVideoDeployment="$AZURE_OPENAI_VIDEO_DEPLOYMENT" \
+              disableImageGeneration="$DISABLE_IMAGE_GENERATION" \
+              disableVideoGeneration="$DISABLE_VIDEO_GENERATION" \
+            --only-show-errors \
+            --output none
+
+          outputs="$(az deployment sub create \
+            --name "campaign-autopilot-${GITHUB_RUN_ID}" \
+            --location "$AZURE_LOCATION" \
+            --template-file infra/main.bicep \
+            --parameters infra/main.parameters.json \
+            --parameters \
+              location="$AZURE_LOCATION" \
+              environmentName="$AZURE_ENVIRONMENT_NAME" \
+              resourceGroupName="$AZURE_RESOURCE_GROUP_NAME" \
+              azureOpenAIEndpoint="$AZURE_OPENAI_ENDPOINT" \
+              azureOpenAIChatDeployment="$AZURE_OPENAI_CHAT_DEPLOYMENT" \
+              azureOpenAIImageDeployment="$AZURE_OPENAI_IMAGE_DEPLOYMENT" \
+              azureOpenAIVideoDeployment="$AZURE_OPENAI_VIDEO_DEPLOYMENT" \
+              disableImageGeneration="$DISABLE_IMAGE_GENERATION" \
+              disableVideoGeneration="$DISABLE_VIDEO_GENERATION" \
+            --query properties.outputs \
+            --only-show-errors \
+            --output json)"
+
+          write_output() {
+            local output_name="$1"
+            local output_path="$2"
+            local output_value
+            output_value="$(jq --exit-status --raw-output \
+              "${output_path} | strings | select(length > 0)" <<< "$outputs")"
+            echo "${output_name}=${output_value}" >> "$GITHUB_OUTPUT"
+          }
+
+          write_output "resource-group" ".resourceGroupName.value"
+          write_output "registry-name" ".containerRegistryName.value"
+          write_output "registry-server" ".containerRegistryLoginServer.value"
+          write_output "container-app-name" ".containerAppName.value"
+          write_output "container-app-url" ".containerAppUrl.value"
+          write_output "runtime-principal-id" ".runtimeIdentityPrincipalId.value"
+
+      - name: Build and push container image
+        env:
+          REGISTRY_NAME: ${{ steps.infrastructure.outputs.registry-name }}
+        run: |
+          set -euo pipefail
+          az acr build \
+            --registry "$REGISTRY_NAME" \
+            --image "${IMAGE_REPOSITORY}:${GITHUB_SHA}" \
+            --file Dockerfile \
+            --only-show-errors \
+            .
+
+      - name: Deploy container image
+        env:
+          RESOURCE_GROUP: ${{ steps.infrastructure.outputs.resource-group }}
+          REGISTRY_SERVER: ${{ steps.infrastructure.outputs.registry-server }}
+          CONTAINER_APP_NAME: ${{ steps.infrastructure.outputs.container-app-name }}
+        run: |
+          set -euo pipefail
+          az extension add --name containerapp --upgrade --only-show-errors
+          az containerapp update \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$CONTAINER_APP_NAME" \
+            --image "${REGISTRY_SERVER}/${IMAGE_REPOSITORY}:${GITHUB_SHA}" \
+            --only-show-errors \
+            --output none
+
+      - name: Verify deployment
+        env:
+          CONTAINER_APP_URL: ${{ steps.infrastructure.outputs.container-app-url }}
+        run: |
+          set -euo pipefail
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error --max-time 20 "$CONTAINER_APP_URL" > /dev/null; then
+              echo "Deployment is healthy at $CONTAINER_APP_URL"
+              exit 0
+            fi
+            echo "Waiting for the new revision (attempt $attempt of 12)..."
+            sleep 10
+          done
+
+          echo "::error::The Container App did not become healthy."
+          exit 1
+
+      - name: Add deployment URL to summary
+        env:
+          RESOURCE_GROUP: ${{ steps.infrastructure.outputs.resource-group }}
+          CONTAINER_APP_URL: ${{ steps.infrastructure.outputs.container-app-url }}
+          RUNTIME_PRINCIPAL_ID: ${{ steps.infrastructure.outputs.runtime-principal-id }}
+        run: |
+          {
+            echo "### Azure deployment complete"
+            echo
+            echo "- Resource group: \`$RESOURCE_GROUP\`"
+            echo "- Application: [$CONTAINER_APP_URL]($CONTAINER_APP_URL)"
+            echo "- Runtime identity principal: \`$RUNTIME_PRINCIPAL_ID\`"
+          } >> "$GITHUB_STEP_SUMMARY"

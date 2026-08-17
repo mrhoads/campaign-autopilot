@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "eastus2"
+    },
+    "environmentName": {
+      "value": "prod"
+    },
+    "resourceGroupName": {
+      "value": "campaign-autopilot-production-rg"
+    },
+    "azureOpenAIEndpoint": {
+      "value": ""
+    },
+    "azureOpenAIChatDeployment": {
+      "value": "gpt-4.1"
+    },
+    "azureOpenAIImageDeployment": {
+      "value": "gpt-image-2"
+    },
+    "azureOpenAIVideoDeployment": {
+      "value": "sora-2"
+    },
+    "disableImageGeneration": {
+      "value": false
+    },
+    "disableVideoGeneration": {
+      "value": false
+    }
+  }
+}
