@@ -2,7 +2,6 @@ import {
   creativeToolStatus,
   dashboardKpis,
   laborDayBrief,
-  laborDayBrief,
   laborDayValidation,
   recentCampaigns,
   seedApprovalPackages,
