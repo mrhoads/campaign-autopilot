@@ -97,7 +97,7 @@ export const contosoTenant: Tenant = {
   content: {
     brandRules,
     briefs: seedBriefs,
-    primaryBrief: laborDayBriefDayBrief,
+    primaryBrief: laborDayBrief,
     contentVariants: seedContentVariants,
     creativeConcepts: seedCreativeConcepts,
     approvalPackages: seedApprovalPackages,
