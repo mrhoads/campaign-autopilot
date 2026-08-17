@@ -47,7 +47,7 @@ function buildSystemPrompt(tenant: Tenant): string {
 CRITICAL CONTENT-FILTER RULES — prompts go through strict safety filters:
 - NEVER use the brand name "${tenant.name}" in any prompt.
 - Depict ADULTS ONLY. Never describe children, kids, teenagers, students, babies, or minors in any prompt. Where a brief implies a younger audience, describe adults in their twenties (e.g. "a new driver in their twenties", "a young adult") and say "a family of adults" rather than "a family". Renders that appear to show minors are rejected by the model's safety system.
-- AVOID national symbolism and sensitive iconography: do NOT mention national flags, Memorial Day directly, patriotic colors prominently, political imagery, military, veterans, uniforms, or service insignia. Reframe holiday energy as "long weekend", "early summer road trip", "family gathering", "community picnic", "open-road getaway".
+- AVOID national symbolism and sensitive iconography: do NOT mention national flags, Labor Day directly, patriotic colors prominently, political imagery, military, veterans, uniforms, or service insignia. Reframe holiday energy as "long weekend", "early summer road trip", "family gathering", "community picnic", "open-road getaway".
 - Keep the tone warm, optimistic, and family-friendly.
 
 ${mascotRules}

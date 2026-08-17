@@ -1,8 +1,9 @@
 import {
   creativeToolStatus,
   dashboardKpis,
-  memorialDayBrief,
-  memorialDayValidation,
+  laborDayBrief,
+  laborDayBrief,
+  laborDayValidation,
   recentCampaigns,
   seedApprovalPackages,
   seedBriefs,
@@ -96,18 +97,18 @@ export const contosoTenant: Tenant = {
   content: {
     brandRules,
     briefs: seedBriefs,
-    primaryBrief: memorialDayBrief,
+    primaryBrief: laborDayBriefDayBrief,
     contentVariants: seedContentVariants,
     creativeConcepts: seedCreativeConcepts,
     approvalPackages: seedApprovalPackages,
-    primaryValidation: memorialDayValidation,
+    primaryValidation: laborDayValidation,
     dashboardKpis,
     recentCampaigns,
     creativeToolStatus,
     brandPulse: [
       {
         label: "Rate variation disclaimer",
-        detail: "Auto-applied to Memorial Day package",
+        detail: "Auto-applied to Labor Day package",
         status: "ok",
       },
       {

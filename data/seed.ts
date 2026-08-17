@@ -18,8 +18,8 @@ export const dashboardKpis: DashboardKpis = {
 
 export const recentCampaigns: RecentCampaignSummary[] = [
   {
-    id: "cmp_memorial_day_auto",
-    title: "Memorial Day Auto — Families & Young Pros",
+    id: "cmp_labor_day_auto",
+    title: "Labor Day Auto — Families & Young Pros",
     productLine: "Auto Insurance",
     status: "in_review",
     channels: ["Email", "Paid Social", "Landing Page", "Display Ads"],
@@ -79,12 +79,12 @@ export const recentCampaigns: RecentCampaignSummary[] = [
   },
 ];
 
-export const memorialDayBrief: CampaignBrief = {
-  id: "brief_memorial_day_auto",
-  requestId: "req_memorial_day_auto",
-  title: "Memorial Day Auto — Families & Young Professionals",
+export const laborDayBrief: CampaignBrief = {
+  id: "brief_labor_day_auto",
+  requestId: "req_labor_day_auto",
+  title: "Labor Day Auto — Families & Young Professionals",
   objective:
-    "Drive a 12% lift in auto insurance quote starts during Memorial Day weekend by celebrating community and modern American life — without leaning on overt political symbolism.",
+    "Drive a 12% lift in auto insurance quote starts during Labor Day weekend by celebrating community and modern American life — without leaning on overt political symbolism.",
   productLine: "Auto Insurance",
   audiences: [
     {
@@ -121,7 +121,7 @@ export const memorialDayBrief: CampaignBrief = {
   ctaOptions: [
     { label: "Start your quote", destination: "/quote/auto", channelHint: "Landing Page" },
     { label: "See your savings options", destination: "/auto/save", channelHint: "Email" },
-    { label: "Quote in minutes", destination: "/quote/auto?utm=memorial", channelHint: "Paid Social" },
+    { label: "Quote in minutes", destination: "/quote/auto?utm=labor", channelHint: "Paid Social" },
   ],
   timeline: {
     kickoff: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
@@ -137,7 +137,7 @@ export const memorialDayBrief: CampaignBrief = {
     {
       name: "Email CTR",
       target: "≥ 3.4%",
-      rationale: "Benchmarks against last Memorial Day program.",
+      rationale: "Benchmarks against last Labor Day program.",
     },
     {
       name: "Paid social CPA",
@@ -321,7 +321,7 @@ export const bundleSaveBrief: CampaignBrief = {
 };
 
 export const seedBriefs: CampaignBrief[] = [
-  memorialDayBrief,
+  laborDayBrief,
   summerSafeDrivingBrief,
   bundleSaveBrief,
 ];
@@ -331,7 +331,7 @@ export const seedContentVariants: ContentVariant[] = [
     id: "cv_em_01",
     channel: "Email",
     label: "Email • Variant A — Family-led",
-    headline: "Hit the road this Memorial Day — covered, confident, ready.",
+    headline: "Hit the road this Labor Day — covered, confident, ready.",
     subheadline: "Auto coverage built for every kind of household.",
     body: "Long weekends are made for the people who ride along. Whether you’re heading to a backyard cookout or a coastline drive, Contoso is here with auto coverage that keeps your household moving. Get a quote in minutes and step into the holiday with one less thing on your list.",
     cta: "Start your quote",
@@ -346,7 +346,7 @@ export const seedContentVariants: ContentVariant[] = [
     label: "Email • Variant B — Young Professional",
     headline: "Your weekend, your way — covered before you hit the road.",
     subheadline: "Quote auto coverage in minutes from your phone.",
-    body: "From rooftop plans to long drives upstate, your Memorial Day should be about the moment — not paperwork. Spin up an auto quote in a few taps and see what coverage could look like for the way you actually drive.",
+    body: "From rooftop plans to long drives upstate, your Labor Day should be about the moment — not paperwork. Spin up an auto quote in a few taps and see what coverage could look like for the way you actually drive.",
     cta: "Quote in minutes",
     audienceNote: "Young professionals 25–34; mobile-first language.",
     complianceNote:
@@ -358,7 +358,7 @@ export const seedContentVariants: ContentVariant[] = [
     channel: "Paid Social",
     label: "Paid Social • Variant A — Carousel",
     headline: "Three stops. One smooth weekend.",
-    body: "Card 1: Beach day. Card 2: Cookout. Card 3: Open road home. Each card pairs a Memorial Day moment with a benefit-led copy line and a soft CTA to start a quote.",
+    body: "Card 1: Beach day. Card 2: Cookout. Card 3: Open road home. Each card pairs a Labor Day moment with a benefit-led copy line and a soft CTA to start a quote.",
     cta: "See your coverage",
     audienceNote: "Lookalike of recent quote-start audiences.",
     complianceNote:
@@ -416,7 +416,7 @@ export const seedContentVariants: ContentVariant[] = [
     id: "cv_brief_01",
     channel: "Email",
     label: "Creative Brief • Snapshot",
-    headline: "Memorial Day Auto — Creative Brief Snapshot",
+    headline: "Labor Day Auto — Creative Brief Snapshot",
     body: "Single-page snapshot of objective, audiences, key messages, channel matrix, must-have disclaimers, and creative do/don’t list. Used for handoff to in-house studio and agency partners.",
     cta: "Open full brief",
     audienceNote: "Internal creative team handoff.",
@@ -504,9 +504,9 @@ export const creativeToolStatus: CreativeToolStatus = {
 
 export const seedApprovalPackages: ApprovalPackage[] = [
   {
-    id: "ap_memorial_day",
-    briefId: "brief_memorial_day_auto",
-    campaignTitle: "Memorial Day Auto — Families & Young Professionals",
+    id: "ap_labor_day",
+    briefId: "brief_labor_day_auto",
+    campaignTitle: "Labor Day Auto — Families & Young Professionals",
     submittedBy: "Jordan Patel",
     submittedAtIso: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
     status: "in_review",
@@ -641,8 +641,8 @@ export const seedApprovalPackages: ApprovalPackage[] = [
   },
 ];
 
-export const memorialDayValidation: ValidationResult = {
-  briefId: "brief_memorial_day_auto",
+export const laborDayValidation: ValidationResult = {
+  briefId: "brief_labor_day_auto",
   generatedAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
   overallStatus: "review_needed",
   score: 86,

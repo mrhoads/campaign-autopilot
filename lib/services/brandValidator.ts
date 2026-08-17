@@ -122,7 +122,7 @@ async function mockValidate(brief: CampaignBrief): Promise<ValidationResult> {
     }
     if (
       rule.category === "tone" &&
-      /patriotic|memorial|holiday|seasonal|back to school|back-to-school/.test(briefText)
+      /patriotic|labor|holiday|seasonal|back to school|back-to-school/.test(briefText)
     ) {
       return {
         ...baseFinding,

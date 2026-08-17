@@ -159,7 +159,7 @@ async function mockTurn(
     patchSummary.push("Added 'Households with Teen Drivers' audience");
   }
 
-  if (lower.includes("patriotic") || lower.includes("memorial")) {
+  if (lower.includes("patriotic") || lower.includes("labor")) {
     patch.creativeNotes = Array.from(
       new Set([
         ...currentBrief.creativeNotes,

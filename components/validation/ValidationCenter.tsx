@@ -70,7 +70,7 @@ export function ValidationCenter({
           <>
             <Badge variant="info">
               <Sparkles className="h-3 w-3" />
-              Memorial Day Auto · Brief
+              Labor Day Auto · Brief
             </Badge>
             <Button onClick={rerun} disabled={running}>
               <PlayCircle className="h-4 w-4" />

@@ -34,7 +34,7 @@ export function sanitizePromptForGeneration(
   s = s.replace(/\bAmerican\s+flags?\b/gi, "festive seasonal decor");
   s = s.replace(/\bUS\s+flags?\b/gi, "festive seasonal decor");
   s = s.replace(/\bU\.S\.\s+flags?\b/gi, "festive seasonal decor");
-  s = s.replace(/\bMemorial Day\b/gi, "long weekend");
+  s = s.replace(/\bLabor Day\b/gi, "long weekend");
   s = s.replace(/\bpatriotic\b/gi, "celebratory");
   s = s.replace(/\bred,?\s*white,?\s*and\s+blue\b/gi, "warm summer colors");
   s = s.replace(/\bred-white-and-blue\b/gi, "warm summer colors");
